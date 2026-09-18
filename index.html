@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Carol & Pipoca ✨ O Pet Fada Mágico</title>
+  <meta name="description" content="Um pet fada mágico interativo que segue você pela tela, solta poeira de estrelas, faz carinho e brinca com você! Feito com amor para a Carol.">
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="apple-touch-icon" href="./assets/icon.png">
+  
+  <!-- Google Fonts: Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="theme-garden">
+
+  <!-- Background Image & Canvas de Efeitos Mágicos -->
+  <div id="bg-scene" class="bg-scene" aria-hidden="true"></div>
+  <canvas id="magic-canvas" class="magic-canvas" aria-hidden="true"></canvas>
+
+  <!-- Ninho das Nuvens (onde o pet descansa ao dormir) -->
+  <div id="cloud-nest" class="cloud-nest" aria-hidden="true">
+    <div class="cloud-puff puff-1"></div>
+    <div class="cloud-puff puff-2"></div>
+    <div class="cloud-puff puff-3"></div>
+    <div class="cloud-glow"></div>
+    <span class="nest-label">Ninho de Nuvens 🌙</span>
+  </div>
+
+  <!-- Pet Follower Container -->
+  <div id="pet-container" class="pet-container" role="region" aria-label="Pet Mágico Interativo">
+    <!-- Balão de Fala do Pet -->
+    <div id="speech-bubble" class="speech-bubble" aria-live="polite">
+      <p id="speech-text">Oie, Carol! Vamos voar juntinhos hoje? ✨</p>
+      <span class="bubble-tail"></span>
+    </div>
+
+    <!-- Efeito de Aura ao Redor do Pet -->
+    <div id="pet-aura" class="pet-aura aura-rainbow"></div>
+
+    <!-- Imagem Sprite do Pet -->
+    <div id="pet-sprite-wrapper" class="pet-sprite-wrapper">
+      <img id="pet-sprite" src="./assets/pet_fly.png" alt="Pipoca, o pet fada mágico da Carol" draggable="false">
+      <!-- Indicador visual de sono (zzz) -->
+      <div id="sleep-zzz" class="sleep-zzz" aria-hidden="true">
+        <span>Z</span><span>z</span><span>z</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD Superior: Status & Configurações Rápidas -->
+  <header class="hud-top" role="banner">
+    <div class="pet-badge">
+      <div class="badge-avatar">
+        <img src="./assets/icon.png" alt="Avatar do Pet">
+        <span class="status-dot pulse" title="Feliz"></span>
+      </div>
+      <div class="badge-info">
+        <div class="badge-title-row">
+          <h1 id="pet-name-display" class="pet-title" title="Clique para renomear">Pipoca</h1>
+          <button id="btn-rename" class="btn-icon-tiny" title="Mudar nome do pet" aria-label="Mudar nome do pet">✏️</button>
+        </div>
+        <div class="vitals-bar-group">
+          <div class="vital-item" title="Felicidade">
+            <span class="vital-icon">💖</span>
+            <div class="progress-track"><div id="bar-happiness" class="progress-fill fill-pink" style="width: 95%;"></div></div>
+          </div>
+          <div class="vital-item" title="Energia">
+            <span class="vital-icon">⚡</span>
+            <div class="progress-track"><div id="bar-energy" class="progress-fill fill-yellow" style="width: 90%;"></div></div>
+          </div>
+          <div class="vital-item" title="Fome">
+            <span class="vital-icon">🧁</span>
+            <div class="progress-track"><div id="bar-hunger" class="progress-fill fill-blue" style="width: 85%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <!-- Alternador de Tema -->
+      <button id="btn-theme" class="hud-pill-btn" title="Alternar Cenário (Jardim / Noite Estelar)">
+        <span class="btn-emoji" id="theme-icon">🌸</span>
+        <span class="btn-label" id="theme-label">Jardim</span>
+      </button>
+
+      <!-- Toggle de Áudio Mágico -->
+      <button id="btn-sound" class="hud-pill-btn" title="Ligar/Desligar Sons Mágicos">
+        <span class="btn-emoji" id="sound-icon">🔊</span>
+        <span class="btn-label" id="sound-label">Som</span>
+      </button>
+
+      <!-- Botão Guia GitHub Pages -->
+      <button id="btn-github-help" class="hud-pill-btn btn-highlight" title="Como hospedar no GitHub Pages">
+        <span class="btn-emoji">🚀</span>
+        <span class="btn-label">GitHub Pages</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Dica de Interação Flutuante no Topo Central -->
+  <div id="quick-hint" class="quick-hint" role="status">
+    ✨ Mexa o mouse ou arraste o dedo: o pet voa com você!
+  </div>
+
+  <!-- Dock Inferior: Ferramentas & Cuidados Mágicos -->
+  <nav class="hud-dock" aria-label="Ações com o Pet">
+    <button id="act-follow" class="dock-btn active" data-mode="follow" title="Seguir o ponteiro pela tela">
+      <span class="dock-icon">🕊️</span>
+      <span class="dock-text">Seguir</span>
+    </button>
+    <button id="act-pet" class="dock-btn" data-mode="pet" title="Fazer carinho e cafuné no pet">
+      <span class="dock-icon">💖</span>
+      <span class="dock-text">Carinho</span>
+    </button>
+    <button id="act-feed" class="dock-btn" data-mode="feed" title="Clique na tela para jogar estrelinhas doces">
+      <span class="dock-icon">🧁</span>
+      <span class="dock-text">Alimentar</span>
+    </button>
+    <button id="act-bubbles" class="dock-btn" data-mode="bubbles" title="Soltar bolhas mágicas para o pet estourar">
+      <span class="dock-icon">🫧</span>
+      <span class="dock-text">Bolhas</span>
+    </button>
+    <button id="act-sleep" class="dock-btn" data-mode="sleep" title="Colocar o pet para tirar uma sonequinha no ninho">
+      <span class="dock-icon">🌙</span>
+      <span class="dock-text">Soneca</span>
+    </button>
+    <button id="act-aura" class="dock-btn" data-mode="aura" title="Mudar a cor da aura brilhante do pet">
+      <span class="dock-icon">🎨</span>
+      <span class="dock-text">Aura</span>
+    </button>
+  </nav>
+
+  <!-- Modal: Guia de Hospedagem no GitHub Pages -->
+  <div id="modal-github" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🚀</span>
+          <h2 id="modal-title">Como hospedar no GitHub Pages</h2>
+        </div>
+        <button id="btn-close-modal" class="modal-close" aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">Este projeto foi construído em formato 100% estático (HTML, CSS e JS nativos), o que significa que ele funciona <strong>diretamente no GitHub Pages</strong> sem precisar instalar nada!</p>
+        
+        <div class="guide-steps">
+          <div class="step-card">
+            <span class="step-num">1</span>
+            <div class="step-content">
+              <strong>Envie o código para o GitHub</strong>
+              <p>Crie um repositório no seu GitHub (ex: <code>pet-carol</code>) e faça o push dos arquivos:</p>
+              <pre><code>git init
+git add .
+git commit -m "Meu Pet Mágico Seguidor ✨"
+git branch -M main
+git remote add origin https://github.com/SEU-USUARIO/pet-carol.git
+git push -u origin main</code></pre>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <span class="step-num">2</span>
+            <div class="step-content">
+              <strong>Ative o GitHub Pages nas configurações</strong>
+              <p>No seu repositório no GitHub:</p>
+              <ol>
+                <li>Clique na aba <strong>Settings</strong> (⚙️ Configurações).</li>
+                <li>No menu esquerdo, clique em <strong>Pages</strong>.</li>
+                <li>Em <em>Build and deployment</em> &gt; <em>Branch</em>, escolha <strong>main</strong> e pasta <strong>/ (root)</strong>.</li>
+                <li>Clique em <strong>Save</strong>!</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <span class="step-num">3</span>
+            <div class="step-content">
+              <strong>Pronto! Compartilhe o link ✨</strong>
+              <p>Em 1 ou 2 minutos, o GitHub vai gerar o link público da sua página:</p>
+              <div class="link-box">
+                <code>https://SEU-USUARIO.github.io/pet-carol/</code>
+              </div>
+              <p>Qualquer pessoa ou a Carol poderá abrir no celular ou computador e o pet vai segui-la!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-modal-ok" class="btn-primary">Entendi, tudo pronto! ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Renomear Pet & Tutora -->
+  <div id="modal-rename" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">✨</span>
+          <h2>Personalizar Amigos</h2>
+        </div>
+        <button id="btn-close-rename" class="modal-close" aria-label="Fechar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="input-pet-name">Nome do Pet Fada:</label>
+          <input type="text" id="input-pet-name" value="Pipoca" maxlength="20" placeholder="Ex: Pipoca, Estrelinha, Nuvem">
+        </div>
+        <div class="form-group">
+          <label for="input-owner-name">Nome da Tutora:</label>
+          <input type="text" id="input-owner-name" value="Carol" maxlength="20" placeholder="Ex: Carol">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-save-rename" class="btn-primary">Salvar Mudanças 💖</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
